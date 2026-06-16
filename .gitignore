@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.tmp/
+.storage/
+bin/
+extensions/
+neutralinojs.log
+.DS_Store
+*.log

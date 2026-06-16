@@ -1,0 +1,45 @@
+{
+  "applicationId": "plus.solo.app",
+  "version": "0.1.0",
+  "defaultMode": "window",
+  "port": 5174,
+  "url": "/",
+  "documentRoot": "/dist/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": true
+  },
+  "nativeAllowList": [
+    "app.*",
+    "os.*",
+    "filesystem.*",
+    "storage.*",
+    "window.*",
+    "events.*",
+    "updater.*"
+  ],
+  "globalVariables": {},
+  "modes": {
+    "window": {
+      "title": "solo.plus",
+      "width": 1280,
+      "height": 800,
+      "minWidth": 1100,
+      "minHeight": 700,
+      "center": true,
+      "resizable": true,
+      "exitProcessOnClose": false
+    }
+  },
+  "cli": {
+    "binaryName": "soloplus",
+    "resourcesPath": "/dist/",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/dist/neutralino.js",
+    "binaryVersion": "6.7.0",
+    "clientVersion": "6.7.0"
+  }
+}

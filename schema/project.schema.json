@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://solo.plus/schema/project.schema.json",
+  "title": "solo.plus Project",
+  "description": "Файл проєкту електричного щитка (абстрактні елементи + опційний шар прив'язки).",
+  "type": "object",
+  "required": ["schemaVersion", "project", "supply", "enclosure", "groups", "placements", "busbars"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.3" },
+    "project": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "referencePdf": { "type": "string" }
+      }
+    },
+    "supply": {
+      "type": "object",
+      "required": ["phases", "voltage"],
+      "additionalProperties": false,
+      "properties": {
+        "phases": { "enum": [1, 3] },
+        "voltage": { "type": "number", "exclusiveMinimum": 0 },
+        "main": { "$ref": "#/$defs/apparatusSpec" },
+        "availablePowerW": { "type": "number", "minimum": 0 }
+      }
+    },
+    "enclosure": {
+      "type": "object",
+      "required": ["type", "ip", "rows", "reserveTargetPct"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["surface", "flush"] },
+        "ip": { "type": "string" },
+        "reserveTargetPct": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "index", "capacityModules"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "index": { "type": "integer", "minimum": 0 },
+              "capacityModules": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/group" }
+    },
+    "placements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/placement" }
+    },
+    "busbars": {
+      "type": "object",
+      "required": ["neutral", "pe"],
+      "additionalProperties": true,
+      "properties": {
+        "neutral": { "$ref": "#/$defs/busbar" },
+        "pe": { "$ref": "#/$defs/busbar" }
+      }
+    },
+    "productBinding": {
+      "type": "object",
+      "required": ["items"],
+      "additionalProperties": false,
+      "properties": {
+        "vendor": { "type": "string" },
+        "selectivityChecked": { "type": "boolean" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["groupRef", "catalogRef"],
+            "additionalProperties": false,
+            "properties": {
+              "groupRef": { "type": "string" },
+              "catalogRef": { "type": "string" },
+              "price": { "type": "number", "minimum": 0 },
+              "currency": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "busbar": {
+      "type": "object",
+      "required": ["present"],
+      "additionalProperties": false,
+      "properties": { "present": { "type": "boolean" } }
+    },
+    "apparatusSpec": {
+      "type": "object",
+      "required": ["device", "poles", "ratingA", "widthModules"],
+      "additionalProperties": false,
+      "properties": {
+        "device": { "enum": ["breaker", "rcd", "rcbo", "switch", "surge", "timer", "impulse_relay", "bell", "socket", "indicator", "phase_selector", "smart_home", "voltage_relay", "contactor", "terminal", "meter", "power_supply", "other"] },
+        "poles": { "enum": [1, 2, 3, 4] },
+        "ratingA": { "type": "number", "exclusiveMinimum": 0 },
+        "curve": { "enum": ["B", "C", "D"] },
+        "residualMa": { "type": "number", "exclusiveMinimum": 0 },
+        "widthModules": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "group": {
+      "type": "object",
+      "required": ["id", "kind", "title", "spec"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "enum": ["rcd", "group"] },
+        "title": { "type": "string" },
+        "spec": { "$ref": "#/$defs/apparatusSpec" },
+        "load": {
+          "type": "object",
+          "required": ["items"],
+          "additionalProperties": false,
+          "properties": {
+            "phases": { "enum": [1, 3] },
+            "loadType": { "type": "string" },
+            "demandFactor": { "type": "number", "minimum": 0, "maximum": 1 },
+            "items": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/loadItem" }
+            }
+          }
+        }
+      }
+    },
+    "loadItem": {
+      "type": "object",
+      "required": ["powerW"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "powerW": { "type": "number", "minimum": 0 },
+        "cosPhi": { "type": "number", "minimum": 0, "maximum": 1 },
+        "quantity": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "required": ["id", "groupRef", "rowId", "startModule", "widthModules", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "groupRef": { "type": "string" },
+        "rowId": { "type": "string" },
+        "startModule": { "type": "integer", "minimum": 0 },
+        "widthModules": { "type": "integer", "minimum": 1 },
+        "phase": { "type": ["string", "null"], "enum": ["L1", "L2", "L3", null] },
+        "label": { "type": "string" }
+      }
+    }
+  }
+}

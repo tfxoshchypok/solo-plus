@@ -1,0 +1,43 @@
+{
+  "name": "solo.plus",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "neu:dev": "concurrently -k -n vite,neu \"vite build --watch\" \"wait-on dist/index.html && neu run\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --checkJs --noEmit -p jsconfig.json",
+    "test:e2e": "playwright test",
+    "neu:update": "neu update",
+    "neu:build": "vite build && neu build --release"
+  },
+  "dependencies": {
+    "@fontsource/signika-negative": "^5.2.8",
+    "@fontsource/yellowtail": "^5.2.8",
+    "@vicons/ionicons5": "^0.13.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "dexie": "^4.4.3",
+    "konva": "^10.3.0",
+    "naive-ui": "^2.44.1",
+    "pinia": "^3.0.4",
+    "vfonts": "^0.0.3",
+    "vue": "^3.5.38"
+  },
+  "devDependencies": {
+    "@neutralinojs/neu": "^11.7.2",
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.3",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "concurrently": "^10.0.3",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8",
+    "wait-on": "^9.0.10"
+  }
+}

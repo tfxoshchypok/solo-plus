@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract version from tag
+        id: version
+        run: echo "value=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Set version in config files
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          jq --arg v "$VERSION" '.version = $v | .globalVariables.appVersion = $v' neutralino.config.json > /tmp/neu.tmp && mv /tmp/neu.tmp neutralino.config.json
+          jq --arg v "$VERSION" '.version = $v' package.json > /tmp/pkg.tmp && mv /tmp/pkg.tmp package.json
+
+      - name: Install Neutralino CLI
+        run: npm install -g @neutralinojs/neu
+
+      - name: Build Vite assets
+        run: npm run build
+
+      # Download all platform binaries into bin/ (bin/ is gitignored, must be fetched in CI)
+      - name: Download NeutralinoJS binaries (all platforms)
+        run: neu update
+
+      # Packages resources.neu from dist/ into dist/soloplus/
+      - name: Build NeutralinoJS resources
+        run: neu build
+
+      - name: Prepare release directory
+        run: mkdir -p release
+
+      # All platform binaries come from bin/ (populated by neu update above)
+      - name: Package Linux x64 (fresh install)
+        run: |
+          cp bin/neutralino-linux_x64 /tmp/soloplus-linux_x64
+          chmod +x /tmp/soloplus-linux_x64
+          zip -j release/soloplus-linux_x64-v${{ steps.version.outputs.value }}.zip \
+            /tmp/soloplus-linux_x64 \
+            dist/soloplus/resources.neu \
+            install.sh \
+            public/icon.svg
+
+      - name: Package Windows x64 (fresh install)
+        run: |
+          cp bin/neutralino-win_x64.exe /tmp/soloplus-win_x64.exe
+          zip -j release/soloplus-win_x64-v${{ steps.version.outputs.value }}.zip \
+            /tmp/soloplus-win_x64.exe \
+            dist/soloplus/resources.neu \
+            install-launcher.ps1
+
+      - name: Package macOS universal (fresh install)
+        run: |
+          cp bin/neutralino-mac_universal /tmp/soloplus-mac_universal
+          zip -j release/soloplus-mac_universal-v${{ steps.version.outputs.value }}.zip \
+            /tmp/soloplus-mac_universal \
+            dist/soloplus/resources.neu
+
+      # Standalone resources.neu for users who only want to update (no reinstall)
+      - name: Add update-only resources.neu
+        run: cp dist/soloplus/resources.neu release/resources.neu
+
+      - name: Create update manifest
+        run: |
+          cat > release/update-manifest.json <<EOF
+          {
+            "version": "${{ steps.version.outputs.value }}",
+            "resourcesURL": "https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.value }}/resources.neu"
+          }
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release/*
+          body: |
+            ## Встановлення з нуля
+
+            ### Linux
+            1. Завантажте `soloplus-linux_x64-v${{ steps.version.outputs.value }}.zip`
+            2. Розпакуйте в будь-яку папку
+            3. Запустіть: `bash install.sh`
+
+            ### Windows
+            1. Завантажте `soloplus-win_x64-v${{ steps.version.outputs.value }}.zip`
+            2. Розпакуйте в окрему папку (наприклад `C:\solo.plus\`)
+            3. Запустіть `soloplus-win_x64.exe`
+            4. *(Опційно)* Правою кнопкою на `install-launcher.ps1` → «Запустити з PowerShell» — створить ярлик на робочому столі
+
+            ### macOS
+            1. Завантажте `soloplus-mac_universal-v${{ steps.version.outputs.value }}.zip`
+            2. Розпакуйте і запустіть `soloplus-mac_universal`
+
+            ---
+
+            ## Оновлення (без перевстановлення)
+            Замініть файл `resources.neu` в папці програми на завантажений `resources.neu` з цього релізу.

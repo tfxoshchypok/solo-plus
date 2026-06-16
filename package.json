@@ -13,7 +13,10 @@
     "typecheck": "tsc --checkJs --noEmit -p jsconfig.json",
     "test:e2e": "playwright test",
     "neu:update": "neu update",
-    "neu:build": "vite build && neu build --release"
+    "neu:build": "vite build && neu build --release",
+    "neu:package-linux": "npm run neu:build && zip -j dist/soloplus-linux_x64.zip dist/soloplus/soloplus-linux_x64 dist/soloplus/resources.neu install.sh public/icon.svg",
+    "neu:package-win": "npm run neu:build && zip -j dist/soloplus-win_x64.zip dist/soloplus/soloplus-win_x64.exe dist/soloplus/resources.neu install-launcher.ps1",
+    "neu:package-mac": "npm run neu:build && zip -j dist/soloplus-mac_universal.zip dist/soloplus/soloplus-mac_universal dist/soloplus/resources.neu"
   },
   "dependencies": {
     "@fontsource/signika-negative": "^5.2.8",
